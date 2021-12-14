@@ -48,14 +48,14 @@ train_set = datasets.ImageFolder(
     transform_train
 )
 
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True, num_workers=8)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True, num_workers=8)
 
 val_set = datasets.ImageFolder(
     valdir,
     transform_val
 )
 
-val_loader = torch.utils.data.DataLoader(val_set, batch_size=128, shuffle=False, num_workers=8)
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
 baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
