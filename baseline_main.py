@@ -4,6 +4,7 @@ import torch.cuda
 import torchvision
 import torchvision.transforms as transforms
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from models import Baseline
 
@@ -47,9 +48,14 @@ testloader = torch.utils.data.DataLoader(
 
 baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=10)])
+checkpoint_callback = ModelCheckpoint()
+trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=10),
+                                                                   checkpoint_callback])
 
 trainer.fit(baseline, train_dataloaders=trainloader, val_dataloaders=testloader)
+
+# retrieve the best checkpoint after training
+print("Best model checkpoint:", checkpoint_callback.best_model_path)
 
 baseline.save_metrics()
 
