@@ -187,6 +187,7 @@ class ResNet(nn.Module):
         out = self.linear(out)
         return out
 
+
 class ResNetWithDropout(nn.Module):
     """ResNet implementation.
 
