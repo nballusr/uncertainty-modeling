@@ -2,6 +2,7 @@ import torch.nn as nn
 import torchvision
 import torch
 
+
 class ResNet50WithDropout(nn.Module):
     """ResNet implementation.
 

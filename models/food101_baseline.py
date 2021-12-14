@@ -2,7 +2,6 @@ from pytorch_lightning.core.lightning import LightningModule
 import torch
 import torch.nn as nn
 import numpy as np
-import torchvision
 
 from models import ResNet50WithDropout
 
