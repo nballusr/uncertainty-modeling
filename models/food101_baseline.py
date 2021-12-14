@@ -4,6 +4,8 @@ import torch.nn as nn
 import numpy as np
 import torchvision
 
+from models import ResNet50WithDropout
+
 
 def correct_predict(feature, labels):
     return (feature.argmax(axis=1) == labels).sum()
@@ -13,7 +15,9 @@ class Food101Baseline(LightningModule):
     def __init__(self, learning_rate, scheduler_length):
         super().__init__()
 
-        self.model = torchvision.models.resnet50(pretrained=True)
+        # ResNet50 pretrained on ImageNet with a new FC Layer
+        self.model = ResNet50WithDropout(pretrained=True, num_classes=True)
+
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = learning_rate
         self.scheduler_length = scheduler_length

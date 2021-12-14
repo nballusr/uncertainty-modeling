@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from models import ResNet18
+from models import ResNet18WithDropout
 
 
 def correct_predict(feature, labels):
@@ -14,7 +14,7 @@ class Baseline(LightningModule):
     def __init__(self, learning_rate, scheduler_length):
         super().__init__()
 
-        self.model = ResNet18()
+        self.model = ResNet18WithDropout()
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = learning_rate
         self.scheduler_length = scheduler_length
