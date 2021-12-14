@@ -35,5 +35,6 @@ class ResNet50WithDropout(nn.Module):
 
         out = self.model(x)
         out = dropout(out)
+        out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
