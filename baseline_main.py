@@ -48,6 +48,6 @@ baseline = Baseline()
 
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus)
 
-trainer.fit(baseline, train_dataloader=trainloader)
+trainer.fit(baseline, train_dataloaders=trainloader)
 
 print("finished")
