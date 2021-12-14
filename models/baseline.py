@@ -30,7 +30,6 @@ class Baseline(LightningModule):
         images, labels = batch
         outputs = self(images)
         loss = self.criterion(outputs, labels)
-        self.log('train_loss', loss)
         num_correct = correct_predict(outputs.squeeze(), labels)
         return {'loss': loss, 'num_correct': num_correct, 'num_total': images.size(0)}
 
@@ -55,16 +54,16 @@ class Baseline(LightningModule):
         outputs = self(images)
         loss = self.criterion(outputs, labels)
         num_correct = correct_predict(outputs.squeeze(), labels)
-        return {'loss': loss, 'num_correct': num_correct, 'num_total': images.size(0)}
+        return {'val_loss': loss, 'val_num_correct': num_correct, 'val_num_total': images.size(0)}
 
     def validation_epoch_end(self, outputs):
         num_total = 0
         num_correct = 0.
         val_loss = 0.
         for element in outputs:
-            val_loss += element['loss'] * element['num_total']
-            num_correct += element['num_correct']
-            num_total += element['num_total']
+            val_loss += element['val_loss'] * element['val_num_total']
+            num_correct += element['val_num_correct']
+            num_total += element['val_num_total']
         val_accuracy = 100. * num_correct / num_total
         val_loss = val_loss / num_total
 
