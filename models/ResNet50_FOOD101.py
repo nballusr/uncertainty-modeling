@@ -18,7 +18,7 @@ class ResNet50WithDropout(nn.Module):
         self.model = torchvision.models.resnet50(pretrained=pretrained)
         in_features = self.model.fc.in_features
         self.model = nn.Sequential(*(list(self.model.children())[:-1]))
-        self.linear = nn.Linear(in_features, num_classes)
+        self.linear = nn.Linear(in_features, 101)
 
     def forward(self, x: torch.Tensor):
         """Forward pass through ResNet.
