@@ -3,6 +3,7 @@ import pytorch_lightning as pl
 import torch.cuda
 import torchvision
 import torchvision.transforms as transforms
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 from models import Baseline
 
@@ -44,10 +45,12 @@ testset = torchvision.datasets.CIFAR10(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
 
-baseline = Baseline()
+baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus)
+trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=10)])
 
-trainer.fit(baseline, train_dataloaders=trainloader)
+trainer.fit(baseline, train_dataloaders=trainloader, val_dataloaders=testloader)
+
+baseline.save_metrics()
 
 print("finished")
