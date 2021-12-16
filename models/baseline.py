@@ -96,14 +96,14 @@ class Baseline(LightningModule):
                     images = images.cuda()
                 for i in range(num_tests):
                     outputs = self(images).squeeze()
-                    outputs = outputs.cpu().detatch().numpy()
-                    results[num_processed:num_processed + images.size(0), i] = np.exp(outputs) / np.sum(np.exp(outputs), axis=1)[:, None]
+                    softmax = nn.Softmax(dim=1)
+                    results[num_processed:num_processed + images.size(0), i] = softmax(outputs).cpu().numpy()
                 dataset_labels[num_processed:num_processed + images.size(0)] = labels.numpy()
                 num_processed += images.size(0)
 
         final_results = [[] for i in range(num_classes)]
         for i in range(num_images):
-            images_class = int(labels[i])
+            images_class = int(dataset_labels[i])
             final_results[images_class].append(results[i])
 
         return np.array(final_results)

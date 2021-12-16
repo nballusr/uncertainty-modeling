@@ -45,6 +45,9 @@ testloader = torch.utils.data.DataLoader(
 
 baseline = Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint, learning_rate=0, scheduler_length=0)
 
+if gpus > 0:
+    baseline = baseline.cuda()
+
 train_results = baseline.compute_results(trainloader, 50000, 10, args.num_tests, gpus)
 
 val_results = baseline.compute_results(testloader, 10000, 10, args.num_tests, gpus)
