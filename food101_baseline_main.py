@@ -59,7 +59,7 @@ val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, 
 
 baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
-checkpoint_callback = ModelCheckpoint(monitor="val_accuracy", save_top_k=-1, mode="max")
+checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=10),
                                                                    checkpoint_callback])
 
