@@ -50,8 +50,8 @@ testloader = torch.utils.data.DataLoader(
 
 baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
-if os.path.isfile(args.pretrained):
-    print("=> loading checkpoint '{}'".format(args.pretrained))
+if os.path.isfile(args.checkpoint):
+    print("=> loading checkpoint '{}'".format(args.checkpoint))
     checkpoint = torch.load(args.checkpoint)
     state_dict = checkpoint['state_dict']
     new_state_dict = dict()
@@ -84,9 +84,9 @@ if os.path.isfile(args.pretrained):
     msg = baseline.load_state_dict(new_state_dict, strict=False)
     print(msg)
     assert set(msg.missing_keys) == {"model.linear.weight", "model.linear.bias"}
-    print("=> loaded pre-trained model '{}'".format(args.pretrained))
+    print("=> loaded pre-trained model '{}'".format(args.checkpoint))
 else:
-    print("=> no checkpoint found at '{}'".format(args.pretrained))
+    print("=> no checkpoint found at '{}'".format(args.checkpoint))
     exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
