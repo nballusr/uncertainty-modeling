@@ -5,6 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint
+import os
 
 from models import Baseline
 
@@ -13,6 +14,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 # parser.add_argument("--num_workers", type=int, required=True, help="Number of workers for the dataloaders")
 parser.add_argument("--epochs", type=int, required=True, help="Number of training epochs")
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--checkpoint', required=True, type=str, help='checkpoint of the pretrained model')
 
 args = parser.parse_args()
 
@@ -47,6 +49,45 @@ testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
 
 baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
+
+if os.path.isfile(args.pretrained):
+    print("=> loading checkpoint '{}'".format(args.pretrained))
+    checkpoint = torch.load(args.checkpoint)
+    state_dict = checkpoint['state_dict']
+    new_state_dict = dict()
+
+    for old_key, value in state_dict.items():
+        if old_key.startswith('resnet_simsiam.backbone.0'):
+            new_key = old_key.replace('resnet_simsiam.backbone.0', 'model.conv1')
+            new_state_dict[new_key] = value
+
+        elif old_key.startswith('resnet_simsiam.backbone.1'):
+            new_key = old_key.replace('resnet_simsiam.backbone.1', 'model.bn1')
+            new_state_dict[new_key] = value
+
+        elif old_key.startswith('resnet_simsiam.backbone.2'):
+            new_key = old_key.replace('resnet_simsiam.backbone.2', 'model.layer1')
+            new_state_dict[new_key] = value
+
+        elif old_key.startswith('resnet_simsiam.backbone.3'):
+            new_key = old_key.replace('resnet_simsiam.backbone.3', 'model.layer2')
+            new_state_dict[new_key] = value
+
+        elif old_key.startswith('resnet_simsiam.backbone.4'):
+            new_key = old_key.replace('resnet_simsiam.backbone.4', 'model.layer3')
+            new_state_dict[new_key] = value
+
+        elif old_key.startswith('resnet_simsiam.backbone.5'):
+            new_key = old_key.replace('resnet_simsiam.backbone.5', 'model.layer4')
+            new_state_dict[new_key] = value
+
+    msg = baseline.load_state_dict(new_state_dict, strict=False)
+    print(msg)
+    assert set(msg.missing_keys) == {"model.linear.weight", "model.linear.bias"}
+    print("=> loaded pre-trained model '{}'".format(args.pretrained))
+else:
+    print("=> no checkpoint found at '{}'".format(args.pretrained))
+    exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=20),
