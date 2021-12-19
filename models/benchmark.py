@@ -78,7 +78,7 @@ class BenchmarkModule(pl.LightningModule):
         self.targets_bank = []
         with torch.no_grad():
             for data in self.dataloader_kNN:
-                img, target, _ = data
+                img, target = data
                 if self.gpus > 0:
                     img = img.cuda()
                     target = target.cuda()
@@ -93,7 +93,7 @@ class BenchmarkModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         # we can only do kNN predictions once we have a feature bank
         if hasattr(self, 'feature_bank') and hasattr(self, 'targets_bank'):
-            images, targets, _ = batch
+            images, targets = batch
             feature = self.backbone(images).squeeze()
             feature = F.normalize(feature, dim=1)
             pred_labels = knn_predict(feature, self.feature_bank, self.targets_bank, self.classes, self.knn_k,
@@ -114,7 +114,8 @@ class BenchmarkModule(pl.LightningModule):
                 self.max_accuracy = acc
                 self.max_accuracy = acc
             self.log('kNN_accuracy', acc * 100.0, prog_bar=True)
-            self.val_accuracy.append(float(acc * 100.0).cpu())
+            self.val_accuracy.append(float(acc * 100.0))
+            self.save_metrics()
 
     def save_metrics(self):
         np.save('train_loss', self.train_loss)

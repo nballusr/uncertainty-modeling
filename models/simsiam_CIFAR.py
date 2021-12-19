@@ -28,11 +28,11 @@ class SimSiamModel(BenchmarkModule):
         return self.resnet_simsiam(x, y)
 
     def training_step(self, batch, batch_idx):
-        (x0, x1), _, _ = batch
-        x0, x1 = self(x0, x1)
+        images, _ = batch
+        x0, x1 = self(images[0], images[1])
         loss = self.criterion(x0, x1)
         # self.log('train_loss_ssl', loss)
-        return {'loss': loss, 'num_total': ___.size(0)}
+        return {'loss': loss, 'num_total': images[0].size(0)}
 
     def configure_optimizers(self):
         optim = torch.optim.SGD(self.resnet_simsiam.parameters(), lr=self.initial_lr,

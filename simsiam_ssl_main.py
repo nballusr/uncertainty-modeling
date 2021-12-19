@@ -3,6 +3,7 @@ import pytorch_lightning as pl
 import torch
 import torchvision
 import torchvision.transforms as transforms
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from models import SimSiamModel
 from util import TwoCropsTransform
@@ -40,7 +41,7 @@ transform_val = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(
-    root='./data', train=True, download=True, transform=TwoCropsTransform(transforms.Compose(transform_train)))
+    root='./data', train=True, download=True, transform=TwoCropsTransform(transform_train))
 
 trainloader = torch.utils.data.DataLoader(
     trainset, batch_size=512, shuffle=True, drop_last=True, num_workers=2)
@@ -70,13 +71,16 @@ else:
 model = SimSiamModel(train_knn_loader, gpus, 10, knn_k, knn_t, args.epochs, num_mlp_layers,
                      initial_lr, weight_decay)
 
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, progress_bar_refresh_rate=100)
+checkpoint_callback = ModelCheckpoint(save_top_k=-1)
+trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, progress_bar_refresh_rate=100, callbacks=[checkpoint_callback])
 
 trainer.fit(
     model,
     train_dataloader=trainloader,
     val_dataloaders=testloader
 )
+
+model.save_metrics()
 
 print(f'Highest test accuracy: {model.max_accuracy:.4f}')
 
