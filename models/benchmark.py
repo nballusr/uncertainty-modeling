@@ -93,14 +93,14 @@ class BenchmarkModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         # we can only do kNN predictions once we have a feature bank
         if hasattr(self, 'feature_bank') and hasattr(self, 'targets_bank'):
-            images, targets = batch
+            images, targets, _ = batch
             feature = self.backbone(images).squeeze()
             feature = F.normalize(feature, dim=1)
             pred_labels = knn_predict(feature, self.feature_bank, self.targets_bank, self.classes, self.knn_k,
                                       self.knn_t)
             num = images.size(0)
             top1 = (pred_labels[:, 0] == targets).float().sum().item()
-            return (num, top1)
+            return num, top1
 
     def validation_epoch_end(self, outputs):
         if outputs:
@@ -111,7 +111,6 @@ class BenchmarkModule(pl.LightningModule):
                 total_top1 += top1
             acc = float(total_top1 / total_num)
             if acc > self.max_accuracy:
-                self.max_accuracy = acc
                 self.max_accuracy = acc
             self.log('kNN_accuracy', acc * 100.0, prog_bar=True)
             self.val_accuracy.append(float(acc * 100.0))
