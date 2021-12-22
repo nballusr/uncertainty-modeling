@@ -92,7 +92,7 @@ else:
 model = BarlowTwinsModel(dataloader_train_kNN, gpus, knn_k, knn_t, args.epochs, num_mlp_layers, initial_lr,
                          weight_decay)
 
-checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
+checkpoint_callback = ModelCheckpoint(save_top_k=-1)
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, progress_bar_refresh_rate=100, callbacks=[checkpoint_callback])
 
 if args.continue_from_checkpoint:
