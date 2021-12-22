@@ -78,7 +78,7 @@ class BenchmarkModule(pl.LightningModule):
         self.targets_bank = []
         with torch.no_grad():
             for data in self.dataloader_kNN:
-                img, target = data
+                img, target, _ = data
                 if self.gpus > 0:
                     img = img.cuda()
                     target = target.cuda()
