@@ -32,13 +32,14 @@ class BarlowTwinsModel(BenchmarkModule):
 
     def training_step(self, batch, batch_idx):
         (x0, x1), _, _ = batch
+        num_total = len(x0)
         x0, x1 = self.resnet_simsiam(x0, x1)
         # our simsiam model returns both (features + projection head)
         z_a, _ = x0
         z_b, _ = x1
         loss = self.criterion(z_a, z_b)
         self.log('train_loss_ssl', loss)
-        return {'loss': loss, 'num_total': x0.size(0)}
+        return {'loss': loss, 'num_total': num_total}
 
     def configure_optimizers(self):
         optim = torch.optim.SGD(self.resnet_simsiam.parameters(), lr=self.initial_lr,
