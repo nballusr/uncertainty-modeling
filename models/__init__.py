@@ -5,3 +5,4 @@ from models.food101_baseline import Food101Baseline
 from models.benchmark import BenchmarkModule
 from models.simsiam_CIFAR import SimSiamModel
 from models.barlowtwins_CIFAR import BarlowTwinsModel
+from models.modified_barlowtwins_CIFAR import ModifiedBarlowTwinsModel

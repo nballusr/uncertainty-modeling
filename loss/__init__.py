@@ -1,1 +1,2 @@
 from loss.barlowtwins_loss import BarlowTwinsLoss
+from loss.modified_barlowtwins_loss import ModifiedBarlowTwinsLoss
