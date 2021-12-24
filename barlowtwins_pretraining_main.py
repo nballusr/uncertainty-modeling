@@ -79,8 +79,9 @@ dataloader_test = torch.utils.data.DataLoader(
 )
 
 if args.num_mlp_layers == 2:
-    print("Not implemented yet")
-    exit()
+    num_mlp_layers = 2
+    initial_lr = 6e-2
+    weight_decay = 5e-4
 elif args.num_mlp_layers == 3:
     num_mlp_layers = 3
     initial_lr = 1e-3
