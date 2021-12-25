@@ -7,9 +7,9 @@ from models import BenchmarkModule
 
 
 class SimSiamModel(BenchmarkModule):
-    def __init__(self, dataloader_kNN, gpus, classes, knn_k, knn_t, cosine_schedule_length,
-                 num_mlp_layers=2, initial_lr=0.003, weight_decay=5e-4):
-        super().__init__(dataloader_kNN, gpus, classes, knn_k, knn_t)
+    def __init__(self, dataloader_kNN, gpus, knn_k, knn_t, cosine_schedule_length, num_mlp_layers, initial_lr,
+                 weight_decay):
+        super().__init__(dataloader_kNN, gpus, 10, knn_k, knn_t)
         # create a ResNet backbone and remove the classification head
         resnet = ResNet18()
         self.backbone = nn.Sequential(
@@ -28,11 +28,12 @@ class SimSiamModel(BenchmarkModule):
         return self.resnet_simsiam(x, y)
 
     def training_step(self, batch, batch_idx):
-        images, _ = batch
-        x0, x1 = self(images[0], images[1])
+        (x0, x1), _, _ = batch
+        num_total = len(x0)
+        x0, x1 = self.resnet_simsiam(x0, x1)
         loss = self.criterion(x0, x1)
-        # self.log('train_loss_ssl', loss)
-        return {'loss': loss, 'num_total': images[0].size(0)}
+        self.log('train_loss_ssl', loss)
+        return {'loss': loss, 'num_total': num_total}
 
     def configure_optimizers(self):
         optim = torch.optim.SGD(self.resnet_simsiam.parameters(), lr=self.initial_lr,
