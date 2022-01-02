@@ -18,6 +18,8 @@ parser.add_argument("--checkpoint", type=str, required=True, help="Checkpoint of
 parser.add_argument("--num_tests", type=int, required=True, help="Number of tests to run")
 parser.add_argument("--train_results_path", type=str, required=True, help="File where to save training dataset results")
 parser.add_argument("--val_results_path", type=str, required=True, help="File where to save validation dataset results")
+parser.add_argument("--train_logits_path", type=str, required=True, help="File where to save training dataset logits")
+parser.add_argument("--val_logits_path", type=str, required=True, help="File where to save validation dataset logits")
 
 args = parser.parse_args()
 
@@ -32,13 +34,6 @@ print('==> Preparing data..')
 traindir = os.path.join(args.data, 'train')
 valdir = os.path.join(args.data, 'val')
 
-transform_train = transforms.Compose([
-    transforms.RandomResizedCrop(224),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
-
 transform_val = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -48,10 +43,10 @@ transform_val = transforms.Compose([
 
 train_set = datasets.ImageFolder(
     traindir,
-    transform_train
+    transform_val
 )
 
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True, num_workers=8)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=False, num_workers=8)
 
 val_set = datasets.ImageFolder(
     valdir,
@@ -66,10 +61,14 @@ if gpus > 0:
     baseline = baseline.cuda()
 
 train_results = baseline.compute_results(train_loader, 75750, 101, args.num_tests, gpus)
+train_logits = baseline.compute_logits(train_loader, 75750, 101, gpus)
 
 val_results = baseline.compute_results(val_loader, 25250, 101, args.num_tests, gpus)
+val_logits = baseline.compute_logits(val_loader, 25250, 101, gpus)
 
 np.save(args.train_results_path, train_results)
 np.save(args.val_results_path, val_results)
+np.save(args.train_logits_path, train_logits)
+np.save(args.val_logits_path, val_logits)
 
 print("finished")
