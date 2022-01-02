@@ -38,3 +38,9 @@ class ResNet50WithDropout(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+    def logits(self, x: torch.Tensor):
+        out = self.model(x)
+        out = out.view(out.size(0), -1)
+        # out = torch.flatten(x, 1) -> is it the same?
+        return out

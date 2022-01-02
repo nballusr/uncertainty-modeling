@@ -109,3 +109,27 @@ class Food101Baseline(LightningModule):
             final_results[images_class].append(results[i])
 
         return np.array(final_results)
+
+    def compute_logits(self, dataloader, num_images, num_classes, gpus):
+        logits = np.zeros((num_images, 2048)) # 2048 harcoded. Maybe it should be taken from an attribute
+        dataset_labels = np.zeros(num_images)
+
+        self.eval()
+        with torch.no_grad():
+            num_processed = 0
+            for batch in dataloader:
+                images, labels = batch
+                if gpus > 0:
+                    images = images.cuda()
+
+                batch_logits = self.model.logits(images).squeeze()
+                logits[num_processed:num_processed + images.size(0)] = batch_logits.cpu().numpy()
+                dataset_labels[num_processed:num_processed + images.size(0)] = labels.numpy()
+                num_processed += images.size(0)
+
+        final_logits = [[] for i in range(num_classes)]
+        for i in range(num_images):
+            images_class = int(dataset_labels[i])
+            final_logits[images_class].append(logits[i])
+
+        return np.array(final_logits)
