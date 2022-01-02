@@ -34,13 +34,6 @@ print('==> Preparing data..')
 traindir = os.path.join(args.data, 'train')
 valdir = os.path.join(args.data, 'val')
 
-transform_train = transforms.Compose([
-    transforms.RandomResizedCrop(224),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
-
 transform_val = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -50,7 +43,7 @@ transform_val = transforms.Compose([
 
 train_set = datasets.ImageFolder(
     traindir,
-    transform_train
+    transform_val
 )
 
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=False, num_workers=8)
