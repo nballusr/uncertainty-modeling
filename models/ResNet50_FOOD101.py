@@ -18,6 +18,7 @@ class ResNet50WithDropout(nn.Module):
         self.model = torchvision.models.resnet50(pretrained=pretrained)
         in_features = self.model.fc.in_features
         self.model = nn.Sequential(*(list(self.model.children())[:-1]))
+        self.dropout = nn.Dropout(0.4)
         self.linear = nn.Linear(in_features, 101)
 
     def forward(self, x: torch.Tensor):
@@ -31,10 +32,9 @@ class ResNet50WithDropout(nn.Module):
             Output tensor of shape bsz x num_classes
 
         """
-        dropout = nn.Dropout(0.4)
 
         out = self.model(x)
-        out = dropout(out)
+        out = self.dropout(out)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out

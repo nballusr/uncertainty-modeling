@@ -52,6 +52,7 @@ class Food101Baseline(LightningModule):
         self.train_loss.append(float(epoch_loss.cpu()))
 
     def validation_step(self, batch, batch_idx):
+        self.model.dropout.train()
         images, labels = batch
         outputs = self(images)
         loss = self.criterion(outputs, labels)
@@ -90,6 +91,7 @@ class Food101Baseline(LightningModule):
         dataset_labels = np.zeros(num_images)
 
         self.eval()
+        self.model.dropout.train()
         with torch.no_grad():
             num_processed = 0
             for batch in dataloader:
@@ -115,6 +117,7 @@ class Food101Baseline(LightningModule):
         dataset_labels = np.zeros(num_images)
 
         self.eval()
+        self.model.dropout.train()
         with torch.no_grad():
             num_processed = 0
             for batch in dataloader:
