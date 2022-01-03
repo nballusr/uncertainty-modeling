@@ -111,8 +111,7 @@ else:
     exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[EarlyStopping(monitor="val_loss", patience=10),
-                                                                   checkpoint_callback])
+trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[checkpoint_callback])
 
 
 trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
