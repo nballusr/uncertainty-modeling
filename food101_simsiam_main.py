@@ -17,6 +17,7 @@ parser.add_argument('data', metavar='DIR', help='path to dataset')
 parser.add_argument("--epochs", type=int, required=True, help="Number of training epochs")
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--checkpoint', required=True, type=str, help='checkpoint of the pretrained model')
+parser.add_argument('--rand-aug', default=False, type=bool, help='Whether to use rand aug or not')
 
 args = parser.parse_args()
 
@@ -31,12 +32,21 @@ print('==> Preparing data..')
 traindir = os.path.join(args.data, 'train')
 valdir = os.path.join(args.data, 'val')
 
-transform_train = transforms.Compose([
-    transforms.RandomResizedCrop(224),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
+if args.rand_aug:
+    transform_train = transforms.Compose([
+        transforms.RandAugment(),
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+else:
+    transform_train = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
 transform_val = transforms.Compose([
     transforms.Resize(256),
