@@ -16,7 +16,7 @@ parser.add_argument('data', metavar='DIR', help='path to dataset')
 # parser.add_argument("--num_workers", type=int, required=True, help="Number of workers for the dataloaders")
 parser.add_argument("--epochs", type=int, required=True, help="Number of training epochs")
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
-parser.add_argument('--checkpoint', required=True, type=str, help='checkpoint of the pretrained model')
+parser.add_argument('--checkpoint', required=False, type=str, help='checkpoint of the pretrained model')
 parser.add_argument('--rand-aug', default=False, type=bool, help='Whether to use rand aug or not')
 parser.add_argument('--resume', required=False, type=str, help='checkpoint of the model to restore the training from')
 
@@ -72,44 +72,47 @@ val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, 
 
 baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 
-if os.path.isfile(args.checkpoint):
-    print("=> loading checkpoint '{}'".format(args.checkpoint))
-    checkpoint = torch.load(args.checkpoint)
-    state_dict = checkpoint['state_dict']
-    new_state_dict = dict()
-
-    for old_key, value in state_dict.items():
-        if old_key.startswith('module.encoder.conv1'):
-            new_key = old_key.replace('module.encoder.conv1', 'model.model.0')
-            new_state_dict[new_key] = value
-
-        elif old_key.startswith('module.encoder.bn1'):
-            new_key = old_key.replace('module.encoder.bn1', 'model.model.1')
-            new_state_dict[new_key] = value
-
-        elif old_key.startswith('module.encoder.layer1'):
-            new_key = old_key.replace('module.encoder.layer1', 'model.model.4')
-            new_state_dict[new_key] = value
-
-        elif old_key.startswith('module.encoder.layer2'):
-            new_key = old_key.replace('module.encoder.layer2', 'model.model.5')
-            new_state_dict[new_key] = value
-
-        elif old_key.startswith('module.encoder.layer3'):
-            new_key = old_key.replace('module.encoder.layer3', 'model.model.6')
-            new_state_dict[new_key] = value
-
-        elif old_key.startswith('module.encoder.layer4'):
-            new_key = old_key.replace('module.encoder.layer4', 'model.model.7')
-            new_state_dict[new_key] = value
-
-    msg = baseline.load_state_dict(new_state_dict, strict=False)
-    print(msg)
-    assert set(msg.missing_keys) == {"model.linear.weight", "model.linear.bias"}
-    print("=> loaded pre-trained model '{}'".format(args.checkpoint))
+if not args.checkpoint:
+    print("Not resuming from a pre-trained model")
 else:
-    print("=> no checkpoint found at '{}'".format(args.checkpoint))
-    exit()
+    if os.path.isfile(args.checkpoint):
+        print("=> loading checkpoint '{}'".format(args.checkpoint))
+        checkpoint = torch.load(args.checkpoint)
+        state_dict = checkpoint['state_dict']
+        new_state_dict = dict()
+
+        for old_key, value in state_dict.items():
+            if old_key.startswith('module.encoder.conv1'):
+                new_key = old_key.replace('module.encoder.conv1', 'model.model.0')
+                new_state_dict[new_key] = value
+
+            elif old_key.startswith('module.encoder.bn1'):
+                new_key = old_key.replace('module.encoder.bn1', 'model.model.1')
+                new_state_dict[new_key] = value
+
+            elif old_key.startswith('module.encoder.layer1'):
+                new_key = old_key.replace('module.encoder.layer1', 'model.model.4')
+                new_state_dict[new_key] = value
+
+            elif old_key.startswith('module.encoder.layer2'):
+                new_key = old_key.replace('module.encoder.layer2', 'model.model.5')
+                new_state_dict[new_key] = value
+
+            elif old_key.startswith('module.encoder.layer3'):
+                new_key = old_key.replace('module.encoder.layer3', 'model.model.6')
+                new_state_dict[new_key] = value
+
+            elif old_key.startswith('module.encoder.layer4'):
+                new_key = old_key.replace('module.encoder.layer4', 'model.model.7')
+                new_state_dict[new_key] = value
+
+        msg = baseline.load_state_dict(new_state_dict, strict=False)
+        print(msg)
+        assert set(msg.missing_keys) == {"model.linear.weight", "model.linear.bias"}
+        print("=> loaded pre-trained model '{}'".format(args.checkpoint))
+    else:
+        print("=> no checkpoint found at '{}'".format(args.checkpoint))
+        exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[checkpoint_callback])
