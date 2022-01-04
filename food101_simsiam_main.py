@@ -18,6 +18,7 @@ parser.add_argument("--epochs", type=int, required=True, help="Number of trainin
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--checkpoint', required=True, type=str, help='checkpoint of the pretrained model')
 parser.add_argument('--rand-aug', default=False, type=bool, help='Whether to use rand aug or not')
+parser.add_argument('--resume', required=False, type=str, help='checkpoint of the model to restore the training from')
 
 args = parser.parse_args()
 
@@ -113,8 +114,10 @@ else:
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[checkpoint_callback])
 
-
-trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
+if not args.resume:
+    trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
+else:
+    trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader, ckpt_path=args.resume)
 
 # retrieve the best checkpoint after training
 print("Best model checkpoint:", checkpoint_callback.best_model_path)
