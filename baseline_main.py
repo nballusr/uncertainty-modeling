@@ -3,7 +3,6 @@ import pytorch_lightning as pl
 import torch.cuda
 import torchvision
 import torchvision.transforms as transforms
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from models import Baseline
