@@ -71,7 +71,7 @@ val_set = datasets.ImageFolder(
 
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
-baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
+baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 

@@ -11,7 +11,7 @@ def correct_predict(feature, labels):
 
 
 class Food101Baseline(LightningModule):
-    def __init__(self, learning_rate, scheduler_length):
+    def __init__(self, learning_rate, scheduler_length, warm_restart=-1):
         super().__init__()
 
         # ResNet50 pretrained on ImageNet with a new FC Layer
@@ -20,6 +20,7 @@ class Food101Baseline(LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = learning_rate
         self.scheduler_length = scheduler_length
+        self.warm_restart = warm_restart
         self.train_loss = []
         self.train_accuracy = []
         self.val_loss = []
@@ -76,8 +77,11 @@ class Food101Baseline(LightningModule):
         self.val_loss.append(float(val_loss.cpu()))
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9, weight_decay=5e-4)
+        if self.warm_restart > -1:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.warm_restart)
+        else:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.scheduler_length)
         return [optimizer], [scheduler]
 
     def save_metrics(self):
