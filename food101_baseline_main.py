@@ -76,7 +76,7 @@ baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 
 training_callbacks = [checkpoint_callback]
-if args.warm_restart > -1:
+if args.warm_restart == -1:
     training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
 
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
