@@ -19,6 +19,9 @@ parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--checkpoint', required=False, type=str, help='checkpoint of the pretrained model')
 parser.add_argument('--rand-aug', default=False, type=bool, help='Whether to use rand aug or not')
 parser.add_argument('--resume', required=False, type=str, help='checkpoint of the model to restore the training from')
+parser.add_argument('--warm-restart', required=False, default=-1, type=int, help='After how many epochs restart the '
+                                                                                 'cosine annealing. If it is -1, no '
+                                                                                 'warm restarts.')
 
 args = parser.parse_args()
 
@@ -115,7 +118,12 @@ else:
         exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[checkpoint_callback])
+
+training_callbacks = [checkpoint_callback]
+if args.warm_restart == -1:
+    training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
+
+trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
 
 if not args.resume:
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
