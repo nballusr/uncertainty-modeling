@@ -61,7 +61,7 @@ testset = torchvision.datasets.CIFAR10(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
 
-baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
+baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")

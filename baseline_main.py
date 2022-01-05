@@ -59,7 +59,7 @@ testset = torchvision.datasets.CIFAR10(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
 
-baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs)
+baseline = Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=[checkpoint_callback])
