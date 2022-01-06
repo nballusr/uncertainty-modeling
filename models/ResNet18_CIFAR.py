@@ -215,6 +215,7 @@ class ResNetWithDropout(nn.Module):
         self.layer2 = self._make_layer(block, self.base*2, layers[1], stride=2)
         self.layer3 = self._make_layer(block, self.base*4, layers[2], stride=2)
         self.layer4 = self._make_layer(block, self.base*8, layers[3], stride=2)
+        self.dropout = nn.Dropout(0.4)
         self.linear = nn.Linear(self.base*8*block.expansion, num_classes)
 
     def _make_layer(self, block, planes, layers, stride):
@@ -236,7 +237,6 @@ class ResNetWithDropout(nn.Module):
             Output tensor of shape bsz x num_classes
 
         """
-        dropout = nn.Dropout(0.4)
 
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)
@@ -245,7 +245,7 @@ class ResNetWithDropout(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        out = dropout(out)
+        out = self.dropout(out)
         out = self.linear(out)
         return out
 
