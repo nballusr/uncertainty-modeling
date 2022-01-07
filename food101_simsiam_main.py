@@ -22,6 +22,7 @@ parser.add_argument('--resume', required=False, type=str, help='checkpoint of th
 parser.add_argument('--warm-restart', required=False, default=-1, type=int, help='After how many epochs restart the '
                                                                                  'cosine annealing. If it is -1, no '
                                                                                  'warm restarts.')
+parser.add_argument('--freeze-backbone', default=False, type=bool, help='Whether to freeze the backbone or not')
 
 args = parser.parse_args()
 
@@ -73,7 +74,8 @@ val_set = datasets.ImageFolder(
 
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
-baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
+baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart,
+                           freeze_backbone=args.freeze_backbone)
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")

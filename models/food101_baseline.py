@@ -11,7 +11,7 @@ def correct_predict(feature, labels):
 
 
 class Food101Baseline(LightningModule):
-    def __init__(self, learning_rate, scheduler_length, warm_restart=-1):
+    def __init__(self, learning_rate, scheduler_length, warm_restart=-1, freeze_backbone=False):
         super().__init__()
 
         # ResNet50 pretrained on ImageNet with a new FC Layer
@@ -25,6 +25,9 @@ class Food101Baseline(LightningModule):
         self.train_accuracy = []
         self.val_loss = []
         self.val_accuracy = []
+        if freeze_backbone:
+            for parameter in self.model.model.parameters():
+                parameter.requires_grad = False
 
     def forward(self, x):
         return self.model(x)
@@ -77,7 +80,8 @@ class Food101Baseline(LightningModule):
         self.val_loss.append(float(val_loss.cpu()))
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9, weight_decay=5e-4)
+        optimizer = torch.optim.SGD((lambda p: p.requires_grad, self.paramters()), lr=self.learning_rate, momentum=0.9,
+                                    weight_decay=5e-4)
         if self.warm_restart > -1:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.warm_restart)
         else:
