@@ -80,7 +80,7 @@ class Food101Baseline(LightningModule):
         self.val_loss.append(float(val_loss.cpu()))
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD((lambda p: p.requires_grad, self.paramters()), lr=self.learning_rate, momentum=0.9,
+        optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.parameters()), lr=self.learning_rate, momentum=0.9,
                                     weight_decay=5e-4)
         if self.warm_restart > -1:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.warm_restart)
