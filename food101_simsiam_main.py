@@ -22,6 +22,8 @@ parser.add_argument('--resume', required=False, type=str, help='checkpoint of th
 parser.add_argument('--warm-restart', required=False, default=-1, type=int, help='After how many epochs restart the '
                                                                                  'cosine annealing. If it is -1, no '
                                                                                  'warm restarts.')
+parser.add_argument('--auto-lr-find', default=False, type=bool, help='Whether to auto find the best lr. It it is set '
+                                                                     'to true, --lr is ignored')
 
 args = parser.parse_args()
 
@@ -126,6 +128,9 @@ if args.warm_restart == -1:
 trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
 
 if not args.resume:
+    if args.auto_lr_find:
+        trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks, auto_lr_find=True)
+        trainer.tune(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
 else:
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader, ckpt_path=args.resume)
