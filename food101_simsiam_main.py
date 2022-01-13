@@ -125,14 +125,15 @@ training_callbacks = [checkpoint_callback]
 if args.warm_restart == -1:
     training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
 
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
-
 if not args.resume:
     if args.auto_lr_find:
         trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks, auto_lr_find=True)
         trainer.tune(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
+    else:
+        trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
 else:
+    trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader, ckpt_path=args.resume)
 
 # retrieve the best checkpoint after training
