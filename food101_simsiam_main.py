@@ -122,7 +122,7 @@ else:
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 
 training_callbacks = [checkpoint_callback]
-if args.warm_restart == -1:
+if args.warm_restart == -1 and not args.auto_lr_find:
     training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
 
 if not args.resume:

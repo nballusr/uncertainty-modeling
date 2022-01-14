@@ -75,6 +75,7 @@ class Food101Baseline(LightningModule):
         self.log('val_loss', val_loss, prog_bar=True)
         self.val_accuracy.append(float(val_accuracy.cpu()))
         self.val_loss.append(float(val_loss.cpu()))
+        self.save_metrics()
 
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9, weight_decay=5e-4)
