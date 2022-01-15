@@ -24,8 +24,15 @@ parser.add_argument('--warm-restart', required=False, default=-1, type=int, help
                                                                                  'warm restarts.')
 parser.add_argument('--auto-lr-find', default=False, type=bool, help='Whether to auto find the best lr. It it is set '
                                                                      'to true, --lr is ignored')
+parser.add_argument('--checkpoint-linear', required=False, type=str, help='checkpoint of the linear model already '
+                                                                          'trained for some epochs')
 
 args = parser.parse_args()
+
+# Assert that only one checkpoint is passed
+assert (args.checkpoint and not args.resume and not args.checkpoint_linear) or \
+       (not args.checkpoint and args.resume and not args.checkpoint_linear) or \
+       (not args.checkpoint and not args.resume and args.checkpoint_linear)
 
 seed = 1
 pl.seed_everything(seed)
@@ -75,7 +82,12 @@ val_set = datasets.ImageFolder(
 
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
-baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
+if not args.checkpoint_linear:
+    baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
+else:
+    baseline = Food101Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint_linear, learning_rate=args.lr,
+                                                    scheduler_length=args.epochs, warm_restart=args.warm_restart)
+    print("=> loaded linear trained model '{}'".format(args.checkpoint_linear))
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")
