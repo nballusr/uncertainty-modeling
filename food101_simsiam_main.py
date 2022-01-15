@@ -26,6 +26,8 @@ parser.add_argument('--auto-lr-find', default=False, type=bool, help='Whether to
                                                                      'to true, --lr is ignored')
 parser.add_argument('--checkpoint-linear', required=False, type=str, help='checkpoint of the linear model already '
                                                                           'trained for some epochs')
+parser.add_argument('--early-stopping', default=-1, type=int, help='patience for early stopping. It it is -1, no '
+                                                                   'early stopping is used.')
 
 args = parser.parse_args()
 
@@ -134,8 +136,8 @@ else:
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 
 training_callbacks = [checkpoint_callback]
-if args.warm_restart == -1 and not args.auto_lr_find:
-    training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
+if args.early_stopping != -1:
+    training_callbacks.append(EarlyStopping(monitor="val_loss", patience=args.early_stopping))
 
 if not args.resume:
     if args.auto_lr_find:
