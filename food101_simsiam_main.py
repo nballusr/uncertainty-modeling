@@ -29,6 +29,9 @@ parser.add_argument('--checkpoint-linear', required=False, type=str, help='check
 parser.add_argument('--early-stopping', default=-1, type=int, help='patience for early stopping. It it is -1, no '
                                                                    'early stopping is used.')
 parser.add_argument('--eta-min', default=0, type=float, help='eta min for cosine scheduler')
+parser.add_argument('--factor-warm-restart', required=False, default=1, type=int, help='A factor increases the number '
+                                                                                       'of epochs of a restart when'
+                                                                                       'using warm-restart.')
 
 args = parser.parse_args()
 
@@ -87,11 +90,11 @@ val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, 
 
 if not args.checkpoint_linear:
     baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart,
-                               eta_min=args.eta_min)
+                               eta_min=args.eta_min, t_mult=args.factor_warm_restart)
 else:
     baseline = Food101Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint_linear, learning_rate=args.lr,
                                                     scheduler_length=args.epochs, warm_restart=args.warm_restart,
-                                                    eta_min=args.eta_min)
+                                                    eta_min=args.eta_min, t_mult=args.factor_warm_restart)
     print("=> loaded linear trained model '{}'".format(args.checkpoint_linear))
 
 if not args.checkpoint:
