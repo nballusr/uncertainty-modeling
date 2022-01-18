@@ -75,7 +75,7 @@ class Food101BaselineAdam(LightningModule):
         self.save_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam()
+        optimizer = torch.optim.Adam(self.parameters())
         return optimizer
 
     def save_metrics(self):
