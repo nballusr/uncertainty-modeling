@@ -11,17 +11,13 @@ def correct_predict(feature, labels):
 
 
 class Food101BaselineAdam(LightningModule):
-    def __init__(self, learning_rate, scheduler_length, warm_restart=-1, eta_min=0):
+    def __init__(self):
         super().__init__()
 
         # ResNet50 pretrained on ImageNet with a new FC Layer
         self.model = ResNet50WithDropout(pretrained=True, num_classes=True)
 
         self.criterion = nn.CrossEntropyLoss()
-        self.learning_rate = learning_rate
-        self.scheduler_length = scheduler_length
-        self.warm_restart = warm_restart
-        self.eta_min = eta_min
         self.train_loss = []
         self.train_accuracy = []
         self.val_loss = []
@@ -79,14 +75,8 @@ class Food101BaselineAdam(LightningModule):
         self.save_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9, weight_decay=5e-4)
-        if self.warm_restart > -1:
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=self.warm_restart,
-                                                                             eta_min=self.eta_min)
-        else:
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.scheduler_length,
-                                                                   eta_min=self.eta_min)
-        return [optimizer], [scheduler]
+        optimizer = torch.optim.Adam()
+        return optimizer
 
     def save_metrics(self):
         np.save("train_loss", self.train_loss)
