@@ -6,3 +6,4 @@ from models.benchmark import BenchmarkModule
 from models.simsiam_CIFAR import SimSiamModel
 from models.barlowtwins_CIFAR import BarlowTwinsModel
 from models.modified_barlowtwins_CIFAR import ModifiedBarlowTwinsModel
+from models.food_101_baseline_adam import Food101BaselineAdam
