@@ -8,6 +8,7 @@ import torchvision.models as models
 import os
 import torch
 import os
+from collections import OrderedDict
 
 from SSL_models_food101 import SimSiam, ResNet50FromSimSiamWithDropout
 
@@ -112,11 +113,17 @@ if not args.checkpoint:
 else:
     if os.path.isfile(args.checkpoint):
         model = SimSiam(models.__dict__[args.arch], 2048, 512)
-        print(model)
-        print(next(model.parameters()).is_cuda)
         print("=> loading checkpoint '{}'".format(args.checkpoint))
         checkpoint = torch.load(args.checkpoint)
-        model.load_state_dict(checkpoint['state_dict'])
+        state_dict = checkpoint['state_dict']
+
+        new_state_dict = OrderedDict()
+
+        for k, v in state_dict.items():
+            name = k[7:]   # remove 'module.' of DataParallel/DistributedDataParallel
+            new_state_dict[name] = v
+
+        model.load_state_dict(new_state_dict)
     else:
         print("=> no checkpoint found at '{}'".format(args.checkpoint))
         exit()
