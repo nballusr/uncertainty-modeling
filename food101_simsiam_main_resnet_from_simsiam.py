@@ -10,7 +10,7 @@ import torch
 import os
 from collections import OrderedDict
 
-from SSL_models_food101 import SimSiam, ResNet50FromSimSiamWithDropout
+from SSL_models_food101 import SimSiam, ResNet50FromSimSiamWithDropout, Food101BaselineFromSimSiam
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -110,6 +110,7 @@ val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, 
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")
+    exit()
 else:
     if os.path.isfile(args.checkpoint):
         model = SimSiam(models.__dict__[args.arch], 2048, 512)
@@ -124,11 +125,13 @@ else:
             new_state_dict[name] = v
 
         model.load_state_dict(new_state_dict)
+        resnet50 = ResNet50FromSimSiamWithDropout(model)
+        baseline = Food101BaselineFromSimSiam(resnet50, learning_rate=args.lr, scheduler_length=args.epochs,
+                                              warm_restart=args.warm_restart, eta_min=args.eta_min,
+                                              t_mult=args.factor_warm_restart)
     else:
         print("=> no checkpoint found at '{}'".format(args.checkpoint))
         exit()
-print("Test finished")
-exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 

@@ -7,10 +7,9 @@ class ResNet50FromSimSiamWithDropout(nn.Module):
     def __init__(self, simsiam_model: nn.Module, num_classes: int = 101):
 
         super(ResNet50FromSimSiamWithDropout, self).__init__()
-        self.model = simsiam_model
-        # Continuar a aqui
-        in_features = self.model.fc.in_features
-        self.model = nn.Sequential(*(list(self.model.children())[:-1]))
+        self.model = simsiam_model.encoder
+        in_features = self.model.fc[0].in_features
+        self.model.fc = nn.Identity()
         self.dropout = nn.Dropout(0.4)
         self.linear = nn.Linear(in_features, 101)
 
