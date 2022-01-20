@@ -1,1 +1,2 @@
 from SSL_models_food101.simsiam import SimSiam
+from SSL_models_food101.ResNet50_from_simsiam_FOOD101 import ResNet50FromSimSiamWithDropout

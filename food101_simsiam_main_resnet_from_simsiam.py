@@ -4,13 +4,23 @@ import torchvision.transforms as transforms
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint
 import torchvision.datasets as datasets
+import torchvision.models as models
 import os
 import torch
 import os
 
-from models import Food101Baseline
+from SSL_models_food101 import SimSiam, ResNet50FromSimSiamWithDropout
+
+model_names = sorted(name for name in models.__dict__
+    if name.islower() and not name.startswith("__")
+    and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch FOOD101 Training')
+parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
+                    choices=model_names,
+                    help='model architecture: ' +
+                        ' | '.join(model_names) +
+                        ' (default: resnet50)')
 parser.add_argument('data', metavar='DIR', help='path to dataset')
 # parser.add_argument("--batch_size", type=int, required=True, help="Batch size for training and validation")
 # parser.add_argument("--num_workers", type=int, required=True, help="Number of workers for the dataloaders")
@@ -88,56 +98,30 @@ val_set = datasets.ImageFolder(
 
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
-if not args.checkpoint_linear:
-    baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart,
-                               eta_min=args.eta_min, t_mult=args.factor_warm_restart)
-else:
-    baseline = Food101Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint_linear, learning_rate=args.lr,
-                                                    scheduler_length=args.epochs, warm_restart=args.warm_restart,
-                                                    eta_min=args.eta_min, t_mult=args.factor_warm_restart)
-    print("=> loaded linear trained model '{}'".format(args.checkpoint_linear))
+# if not args.checkpoint_linear:
+#     baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart,
+#                                eta_min=args.eta_min, t_mult=args.factor_warm_restart)
+# else:
+#     baseline = Food101Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint_linear, learning_rate=args.lr,
+#                                                     scheduler_length=args.epochs, warm_restart=args.warm_restart,
+#                                                     eta_min=args.eta_min, t_mult=args.factor_warm_restart)
+#     print("=> loaded linear trained model '{}'".format(args.checkpoint_linear))
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")
 else:
     if os.path.isfile(args.checkpoint):
+        model = SimSiam(models.__dict__[args.arch], 2048, 512)
+        print(model)
+        print(next(model.parameters()).is_cuda)
         print("=> loading checkpoint '{}'".format(args.checkpoint))
         checkpoint = torch.load(args.checkpoint)
-        state_dict = checkpoint['state_dict']
-        new_state_dict = dict()
-
-        for old_key, value in state_dict.items():
-            if old_key.startswith('module.encoder.conv1'):
-                new_key = old_key.replace('module.encoder.conv1', 'model.model.0')
-                new_state_dict[new_key] = value
-
-            elif old_key.startswith('module.encoder.bn1'):
-                new_key = old_key.replace('module.encoder.bn1', 'model.model.1')
-                new_state_dict[new_key] = value
-
-            elif old_key.startswith('module.encoder.layer1'):
-                new_key = old_key.replace('module.encoder.layer1', 'model.model.4')
-                new_state_dict[new_key] = value
-
-            elif old_key.startswith('module.encoder.layer2'):
-                new_key = old_key.replace('module.encoder.layer2', 'model.model.5')
-                new_state_dict[new_key] = value
-
-            elif old_key.startswith('module.encoder.layer3'):
-                new_key = old_key.replace('module.encoder.layer3', 'model.model.6')
-                new_state_dict[new_key] = value
-
-            elif old_key.startswith('module.encoder.layer4'):
-                new_key = old_key.replace('module.encoder.layer4', 'model.model.7')
-                new_state_dict[new_key] = value
-
-        msg = baseline.load_state_dict(new_state_dict, strict=False)
-        print(msg)
-        assert set(msg.missing_keys) == {"model.linear.weight", "model.linear.bias"}
-        print("=> loaded pre-trained model '{}'".format(args.checkpoint))
+        model.load_state_dict(checkpoint['state_dict'])
     else:
         print("=> no checkpoint found at '{}'".format(args.checkpoint))
         exit()
+print("Test finished")
+exit()
 
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 
