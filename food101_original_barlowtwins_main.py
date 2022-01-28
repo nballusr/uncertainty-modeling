@@ -21,8 +21,23 @@ parser.add_argument('--resume', required=False, type=str, help='checkpoint of th
 parser.add_argument('--warm-restart', required=False, default=-1, type=int, help='After how many epochs restart the '
                                                                                  'cosine annealing. If it is -1, no '
                                                                                  'warm restarts.')
+parser.add_argument('--auto-lr-find', default=False, type=bool, help='Whether to auto find the best lr. It it is set '
+                                                                     'to true, --lr is ignored')
+parser.add_argument('--checkpoint-linear', required=False, type=str, help='checkpoint of the linear model already '
+                                                                          'trained for some epochs')
+parser.add_argument('--early-stopping', default=-1, type=int, help='patience for early stopping. It it is -1, no '
+                                                                   'early stopping is used.')
+parser.add_argument('--eta-min', default=0, type=float, help='eta min for cosine scheduler')
+parser.add_argument('--factor-warm-restart', required=False, default=1, type=int, help='A factor increases the number '
+                                                                                       'of epochs of a restart when'
+                                                                                       'using warm-restart.')
 
 args = parser.parse_args()
+
+# Assert that only one checkpoint is passed
+assert (args.checkpoint and not args.resume and not args.checkpoint_linear) or \
+       (not args.checkpoint and args.resume and not args.checkpoint_linear) or \
+       (not args.checkpoint and not args.resume and args.checkpoint_linear)
 
 seed = 1
 pl.seed_everything(seed)
@@ -72,7 +87,14 @@ val_set = datasets.ImageFolder(
 
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=False, num_workers=8)
 
-baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart)
+if not args.checkpoint_linear:
+    baseline = Food101Baseline(learning_rate=args.lr, scheduler_length=args.epochs, warm_restart=args.warm_restart,
+                               eta_min=args.eta_min, t_mult=args.factor_warm_restart)
+else:
+    baseline = Food101Baseline.load_from_checkpoint(checkpoint_path=args.checkpoint_linear, learning_rate=args.lr,
+                                                    scheduler_length=args.epochs, warm_restart=args.warm_restart,
+                                                    eta_min=args.eta_min, t_mult=args.factor_warm_restart)
+    print("=> loaded linear trained model '{}'".format(args.checkpoint_linear))
 
 if not args.checkpoint:
     print("Not resuming from a pre-trained model")
@@ -119,14 +141,18 @@ else:
 checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_top_k=-1, mode="min")
 
 training_callbacks = [checkpoint_callback]
-if args.warm_restart == -1:
-    training_callbacks.append(EarlyStopping(monitor="val_loss", patience=10))
-
-trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
+if args.early_stopping != -1:
+    training_callbacks.append(EarlyStopping(monitor="val_loss", patience=args.early_stopping))
 
 if not args.resume:
+    if args.auto_lr_rate:
+        trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks, auto_lr_find=True)
+        trainer.tune(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
+    else:
+        trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
 else:
+    trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks)
     trainer.fit(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader, ckpt_path=args.resume)
 
 # retrieve the best checkpoint after training
