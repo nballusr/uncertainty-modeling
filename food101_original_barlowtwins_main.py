@@ -145,7 +145,7 @@ if args.early_stopping != -1:
     training_callbacks.append(EarlyStopping(monitor="val_loss", patience=args.early_stopping))
 
 if not args.resume:
-    if args.auto_lr_rate:
+    if args.auto_lr_find:
         trainer = pl.Trainer(max_epochs=args.epochs, gpus=gpus, callbacks=training_callbacks, auto_lr_find=True)
         trainer.tune(baseline, train_dataloaders=train_loader, val_dataloaders=val_loader)
     else:
